@@ -1,15 +1,13 @@
 import os
 import logging
 import tempfile
-import asyncio
 import httpx
-import edge_tts
+from gtts import gTTS
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
 
 TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 GROQ_KEY = os.environ["GROQ_KEY"]
-VOICE = "es-AR-ElenaNeural"
 
 SYSTEM_PROMPT = """Sos Vera, la asistente personal de Marcelo.
 Marcelo es ingeniero en PS Energy (Mendoza, Argentina), trabaja en integridad de oleoductos,
@@ -54,11 +52,11 @@ async def get_groq_response(user_id: int, user_text: str) -> str:
     return reply
 
 
-async def text_to_speech(text: str) -> str:
+def text_to_speech(text: str) -> str:
     tmp = tempfile.NamedTemporaryFile(suffix=".mp3", delete=False)
     tmp.close()
-    communicate = edge_tts.Communicate(text, VOICE)
-    await communicate.save(tmp.name)
+    tts = gTTS(text=text, lang="es", tld="com.ar")
+    tts.save(tmp.name)
     return tmp.name
 
 
@@ -69,7 +67,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         reply = await get_groq_response(user_id, user_text)
         await update.message.reply_text(reply)
-        audio_path = await text_to_speech(reply)
+        audio_path = text_to_speech(reply)
         await update.message.reply_voice(voice=open(audio_path, "rb"))
         os.unlink(audio_path)
     except Exception as e:
@@ -91,7 +89,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         reply = await get_groq_response(user_id, user_text)
         await update.message.reply_text(f"🎤 _{user_text}_\n\n{reply}", parse_mode="Markdown")
-        audio_path = await text_to_speech(reply)
+        audio_path = text_to_speech(reply)
         await update.message.reply_voice(voice=open(audio_path, "rb"))
         os.unlink(audio_path)
     except Exception as e:
