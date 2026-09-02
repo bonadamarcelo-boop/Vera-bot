@@ -46,7 +46,7 @@ async def get_groq_response(user_id: int, user_text: str) -> str:
         response = await client.post(
             "https://api.groq.com/openai/v1/chat/completions",
             headers={"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"},
-            json={"model":"llama-3.3-70b-versatile","messages": messages, "max_tokens": 500}
+            json={"model": "llama-3.3-70b-versatile", "messages": messages, "max_tokens": 500}
         )
         data = response.json()
         reply = data["choices"][0]["message"]["content"]
@@ -107,4 +107,3 @@ if __name__ == "__main__":
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
     print("Vera bot iniciado")
     app.run_polling(drop_pending_updates=True)
-
